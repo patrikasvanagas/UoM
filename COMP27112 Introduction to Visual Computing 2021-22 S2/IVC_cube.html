@@ -1,0 +1,139 @@
+<html>
+
+<head>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <script type="module">
+        // ID 10455596
+        import * as THREE from "https://web.cs.manchester.ac.uk/three/three.js-master/build/three.module.js";
+
+        function initialise() {
+            const scene = new THREE.Scene();
+            // 1. What is the purpose of the four arguments of the PerspectiveCamera function?
+            // PerspectiveCamera( fov : Number, aspect : Number, near : Number, far : Number );
+            // fov — angle in degrees between top and bottom planes of the view pyramid 
+            //(that you can see around the center of the camera)
+            // aspect - Camera frustum aspect ratio; image width divided by height.
+            // near — minimum distance from the camera that will get into rendering.
+            // far — Camera frustum far plane, maximum distance from the camera that
+            // will get into rendering; must be greater than near.
+
+            // 2. What happens when you increase or decrease the numerical values?
+            // fov: increasing FOV widens the view, i.e. captures more objects in the scene without necessarily
+            // seeming closer or more distant than that with a lesser FOV, and reducing fov (narrowing the view) does the opposite;
+            //  thus the term wider of narrower FOV. E.g. 47 degrees corresponds to a 50mm focal length diagonal full frame FOV,
+            //  63 degrees to 35mm diagonal FOV etc.
+            // aspect - it is defined as the width divided by height, so the larger ratio corresponds to
+            // a more elongated (vertically squashed) scene, and vice versa. The scene will still
+            // take up the whole window, but the defined geometry (the cuboid) will get distorted.
+            // near - we can increase this value so that first the closest parts of the rotating cuboid will not get rendered
+            // (as they will be closer to the camera than the near plane of the frustum) and further increasing the value
+            // will result in the cuboid not being rendered at all. The value must be greater than 0 and smaller than far.
+            // far - we can decrease this value so that first the furthest parts of the rotating cuboid will not get rendered
+            // (as they will be further to the camera than the far plane of the frustum) and further decreasing the value
+            // will result in the cuboid not being rendered at all. The value can be very large and must be larger than near.
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth
+                / window.innerHeight, 0.1, 1000);
+            // 3. What is the purpose of the value of camera.position.z?
+            // This is a part of camera.position.set(x, y, z) which only sets the z
+            // coordinate of the camera, i.e. we could have achieved the same result by writing camera.position.set(0, 0, 5);
+            // all values are 0 by default, thus the camera is at the origin by default. Now it is set to be
+            // 5 units from the origin in the z direction.
+
+            // 4. What happens when you increase or decrease the value?
+            // If we increase the value, the cuboid gets smaller (we get further away from the origin, where the cuboid is by default), and also it can come outside
+            // the zone between the near and far frustum (if we increase the value it gets behind the far and at first furthest parts of it are not displayed).
+            // If we decrease the value, the cuboid gets larger, and can also become closer than near, and at first the closest parts are not displayed.
+            camera.position.z = 5;
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setClearColor(0x000000, 1.0);
+            // 5. What happens when the values of the arguments to renderer.setSize() are changed?
+            // Clear from the documentation what renderer.setsize() does: Resizes the output canvas to (width, height) with device pixel ratio taken into
+            // account, and also sets the viewport to fit that size, starting in (0, 0). So if we change either the width or the height, the corresponding dimension
+            // of the canvas (i.e. the whole scene) will get resized and squeezed if the value is less than window.innerWidth (and correspondingly for the height)
+            // and stretched if the input larger than window.innerWidth (or height).
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+            const mesh = shaderCube(scene);
+            return [renderer, scene, camera, mesh];
+        }
+
+        function shaderCube(scene) {
+            //6. What is the effect of changing the three arguments of BoxGeometry called in shaderCube()?
+            // BoxGeometry(width : Float, height : Float, depth : Float, widthSegments : Integer, heightSegments : Integer, depthSegments : Integer).
+            // If we change width, the length of the edges originally (without animation) parallel to the x axis will be changed accordingly.
+            // If we change height, the length of the edges originally (without animation) parallel to the y axis will be changed accordingly.
+            // If we change depth, the length of the edges originally (without animation) parallel to the z axis will be changed accordingly.
+            const geometry = new THREE.BoxGeometry(2, 1, 1);
+
+            // 8. How would you change the cuboid’s colour?
+            // There are a few ways to do this. One would be to swap the ShaderMaterial() function for something simpler from the
+            // three.js documentation's material's section. For example, if we comment the ShaderMaterial lines and instead use:
+            // const material = new THREE.MeshBasicMaterial( { color: 0xff0000} );  
+            // we will get a red cube.
+            // Another way of changing the color is keeping the ShaderMaterial(), but changing the gl_FragColor vec4 in the fragmentShader() function.
+            // For example, we set it to red color by writing:
+            //  gl_FragColor = vec4(1.0, 0, 0 , 1.0)
+            //  (arguments are normalised RGB and Alpha.) We can also make this vec4 depend on, say, time.
+
+            const material = new THREE.ShaderMaterial({
+                fragmentShader: fragmentShader(),
+                vertexShader: vertexShader(),
+            })
+            const mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh)
+            return mesh
+        }
+
+
+
+
+        function fragmentShader() {
+            return `
+    varying vec3 vposInterpolated;
+    void main() {
+        gl_FragColor = vec4(vposInterpolated, 1.0);
+    }
+ `
+
+        }
+
+        function vertexShader() {
+            return `
+    vec4 p;
+    varying vec3 vposInterpolated;
+    void main() {
+        p = projectionMatrix * modelViewMatrix * vec4(position,
+        1.0);
+        gl_Position = p;
+        vposInterpolated = p.xyz;
+    }
+ `
+
+        }
+
+        function animate() {
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+            // 7. How will you speed up the cuboid’s motion?
+            // .rotation : Euler; Object's local rotation (see Euler angles), in radians.
+            // To speed up, increase the value of either mesh.rotation.x or mesh.rotation.y;
+            // or we could also add some value of mesh.rotation.z and the absolute velocity would be increased.
+            mesh.rotation.x += 0.011;
+            mesh.rotation.y += 0.013;
+        }
+
+        const [renderer, scene, camera, mesh] = initialise();
+        animate();
+
+    </script>
+</body>
+
+</html>

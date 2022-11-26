@@ -1,0 +1,119 @@
+<html>
+
+<head>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <script type="module">
+        import * as THREE from "https://web.cs.manchester.ac.uk/three/three.js-master/build/three.module.js";
+        import { OrbitControls } from "https://web.cs.manchester.ac.uk/three/three.js-master/examples/jsm/controls/OrbitControls.js";
+
+
+        const NUM_LORENZ = 3;
+        const sigma = 10;
+        const rho = 28;
+        const beta = 2.6;
+        const dt = 0.01;
+        let drawCount = 2
+        let MAXPOINTS = 50000;
+        const [renderer, scene, camera, LorenzLine, LorenzSphere] = init();
+        animate();
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.autoRotate = false;
+
+        function init() {
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth
+                / window.innerHeight, 1, 10000);
+            camera.position.set(0, 0, 100); //z=1000 was default
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            var LorenzLine = new Array(NUM_LORENZ); //array for the line
+            var LorenzSphere = new Array(NUM_LORENZ); //  the sphere that you will draw ahead of the line
+            var LorenzGeometry = new Array(NUM_LORENZ); //geometry of the line
+            var LorenzMaterial = new Array(NUM_LORENZ); //material of the line
+            var SphereGeometry = new Array(NUM_LORENZ); // geometry of the sphere
+            var SphereMaterial = new Array(NUM_LORENZ); // material of the sphere
+            var Sphere = new Array(NUM_LORENZ); // accumulating material and geometry of the spheres.
+            // var LorenzColours = new Array(0x00FF00, 0xff0000);
+            // var SphereColours = new Array(0x00FF00, 0xff0000);
+            var Colours = new Array(NUM_LORENZ); // colours of spheres and corresponding lines
+
+            var x = new Array(NUM_LORENZ),
+                y = new Array(NUM_LORENZ),
+                z = new Array(NUM_LORENZ),
+                sigma = new Array(NUM_LORENZ), //sigma
+                rho = new Array(NUM_LORENZ), //beta
+                beta = new Array(NUM_LORENZ); //rho
+
+            for (let n = 0; n < NUM_LORENZ; n++) {
+                LorenzGeometry[n] = new THREE.BufferGeometry();
+                var points = new Float32Array(3 * MAXPOINTS);
+                points[0] = Math.random() / 50;
+                points[1] = Math.random() / 50;
+                points[2] = Math.random() / 50;
+                LorenzGeometry[n].setAttribute('position', new THREE.BufferAttribute(points, 3));
+                Colours[n] = Math.random() * 0xFFFFFF; // randomise colour of n-th sphere and its line
+                // LorenzMaterial[n] = new THREE.LineBasicMaterial({ color: LorenzColours[n], linewidth: 1 });
+                LorenzMaterial[n] = new THREE.LineBasicMaterial({ color: Colours[n], linewidth: 2 });
+                LorenzLine[n] = new THREE.Line(LorenzGeometry[n], LorenzMaterial[n]);
+                SphereGeometry[n] = new THREE.SphereGeometry(2);
+                // SphereMaterial[n] = new THREE.MeshBasicMaterial({ color: SphereColours[n] });
+                SphereMaterial[n] = new THREE.MeshBasicMaterial({ color: Colours[n] });
+                LorenzSphere[n] = new THREE.Mesh(SphereGeometry[n], SphereMaterial[n]);
+                scene.add(LorenzLine[n]);
+                scene.add(LorenzSphere[n]);
+            }
+
+            return [renderer, scene, camera, LorenzLine, LorenzSphere];
+        }
+
+        function lorenzCoordinates(x, y, z) {
+            let x_new = x + (x + sigma * (y - x)) * dt;
+            let y_new = y + (rho * x - y - x * z) * dt;
+            let z_new = z + (- beta * z + x * y) * dt;
+            return [x_new, y_new, z_new];
+        }
+
+        function updateLorenz() {
+            for (let n = 0; n < NUM_LORENZ; n++) {
+                let LorenzPoints = LorenzLine[n].geometry.attributes.position.array;
+                let x = LorenzPoints[drawCount - 2];
+                let y = LorenzPoints[drawCount - 1]
+                let z = LorenzPoints[drawCount];
+                [x, y, z] = lorenzCoordinates(x, y, z);
+                LorenzSphere[n].position.set(x, y, z)
+                LorenzPoints[drawCount + 1] = x;
+                LorenzPoints[drawCount + 2] = y;
+                LorenzPoints[drawCount + 3] = z;
+                LorenzLine[n].geometry.attributes.position.needsUpdate = true;
+                LorenzLine[n].geometry.setDrawRange(0, drawCount / 3);
+            }
+            drawCount += 3;
+        }
+
+
+        function animate() {
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+            // check we are not exceeding the space allocated for the points. 
+            if (drawCount / 3 > MAXPOINTS) {
+                drawCount = 2;
+            }
+            updateLorenz();
+        }
+
+
+    </script>
+</body>
+
+</html>
