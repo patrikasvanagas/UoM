@@ -1,0 +1,11 @@
+# Region file format: DS9 version 4.1
+global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
+physical
+circle(627.67,365.75,1.6012081) # text={8}
+circle(276.75,618.19,1.894945) # text={9}
+circle(535.47,636.44,1.6575217) # text={10}
+circle(566.89,659.25,1.8927254) # text={11}
+circle(597.51,717.16,2.5971636) # text={12}
+circle(780.74,236.12,1.8813048) # text={13}
+circle(495.77,645.99,1.4727539) # text={14}
+circle(599.59,740.72,1.9411676) # text={15}

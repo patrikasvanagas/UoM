@@ -1,0 +1,11 @@
+# Region file format: DS9 version 4.1
+global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
+physical
+annulus(627.67,365.75,1.6012081,3.2024162) # text={8}
+annulus(276.75391,618.1895,1.894945,3.78989) # text={9}
+annulus(535.47079,636.44052,1.6575217,3.3150434) # text={10}
+annulus(566.89,659.25,1.8927254,3.7854508) # text={11}
+annulus(597.51,717.16,2.5971636,5.1943272) # text={12}
+annulus(780.74,236.12,1.8813048,3.7626096) # text={13}
+annulus(495.77,645.99,1.4727539,2.9455078) # text={14}
+annulus(599.59,740.72,1.9411676,3.8823352) # text={15}
